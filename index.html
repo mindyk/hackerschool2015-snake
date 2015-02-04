@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+
+</head>
+<body>
+<canvas id="game" width="640" height="480" style="border:1px solid #000;"></canvas>
+<script>
+    var canvas = document.getElementById('game'),
+            ctx = canvas.getContext('2d');
+
+    /**
+     * Game
+     * @type
+     */
+    Game = {
+
+        c: null,
+        resolution: {w: null, h: null},
+        dead: false,
+        speed: 500,
+
+        S: {
+            length: 3,
+            posx: 100,
+            posy: 100,
+            size: 10,
+            direction: 'O',
+            pos: [{x: 100, y: 100}, {x: 90, y: 100}, {x: 80, y: 100}]
+        },
+
+        Food: [{x: 150, y: 150}],
+
+        init: function (ctx, w, h) {
+            console.log('Game.init');
+            Game.c = ctx;
+            Game.resolution.w = w;
+            Game.resolution.h = h;
+
+            document.addEventListener("keydown", function (e) {
+                switch (e.which) {
+                    case 32: // SPACE
+                        //Game.start();
+                        break;
+                    case 87: // W
+                        Game.S.direction = 'N';
+                        break;
+                    case 68 : // D
+                        Game.S.direction = 'O';
+                        break;
+                    case 65 : // A
+                        Game.S.direction = 'W';
+                        break;
+                    case 83 : // S
+                        Game.S.direction = 'S';
+                        break;
+                    case 27:
+                        Game.dead = true;
+                        break;
+                    default:
+                        console.log(e.which);
+                        break;
+                }
+            })
+
+
+        },
+
+        draw: function () {
+            if (Game.dead == true) {
+                return;
+            }
+            requestAnimationFrame(Game.draw);
+
+            Game.c.clearRect(0, 0, Game.resolution.w, Game.resolution.h);
+            Game.c.fillStyle = '#000000';
+            for (var i = 0; i <= Game.S.length - 1; i++) {
+                Game.c.fillRect(Game.S.pos[i].x, Game.S.pos[i].y, Game.S.size, Game.S.size);
+            }
+
+            Game.c.fillStyle = '#00FF00';
+            for (var f = 0; f < Game.Food.length; f++) {
+                Game.c.fillRect(Game.Food[f].x, Game.Food[f].y, 10, 10);
+            }
+
+        },
+
+        start: function () {
+            console.log('start');
+            Game.update();
+            Game.move();
+            Game.draw();
+            Game.spawn();
+        },
+
+        spawn : function () {
+            if (Game.dead == true) {
+                return;
+            }
+            var x = Math.floor(Math.random() * Game.resolution.w /10) * 10,
+                y = Math.floor(Math.random() * Game.resolution.h / 10)* 10;
+            Game.Food.push({x:x, y:y});
+            setTimeout(Game.spawn, 5000);
+        },
+
+        move: function () {
+            if (Game.dead == true) {
+                return;
+            }
+            switch (Game.S.direction) {
+                case 'N':
+                    Game.S.posy -= Game.S.size;
+                    break;
+                case 'O':
+                    Game.S.posx += Game.S.size;
+                    break;
+                case 'S':
+                    Game.S.posy += Game.S.size;
+                    break;
+                case 'W':
+                    Game.S.posx -= Game.S.size;
+                    break;
+            }
+
+            if (Game.Food.length > 0) {
+                for (var f = 0; f < Game.Food.length; f++) {
+                    if (Game.S.posx == Game.Food[f].x) {
+                        if (Game.S.posy ==  Game.Food[f].y) {
+                            Game.S.length += 1;
+                            Game.S.pos.unshift({x: Game.S.posx, y: Game.S.posy});
+                            Game.Food.splice(f, 1);
+                            Game.speed -= 5;
+                            console.log(Game.speed);
+                        }
+                    }
+                }
+            }
+
+
+            Game.S.pos.unshift({x: Game.S.posx, y: Game.S.posy});
+            Game.S.pos.pop();
+            setTimeout(Game.move, Game.speed);
+        }
+        ,
+
+        update: function () {
+            //console.log(Game.xBg,'update');
+            if (Game.dead == true) {
+                return;
+            }
+
+
+            setTimeout(Game.update, 1000 / 60);
+        }
+    };
+
+    (function () {
+        Game.init(ctx, 640, 480);
+        requestAnimationFrame(Game.draw);
+        Game.start();
+    })();
+</script>
+</body>
+</html>
